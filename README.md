@@ -1,25 +1,31 @@
 # 🛒 Voice-Enabled Shopping Assistant
 
-### Project Overview
+![Python](https://img.shields.io/badge/python-3.9-blue.svg)
+![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)
+![NLP](https://img.shields.io/badge/NLP-Fuzzy%20Matching-orange)
 
-This is a smart, voice-controlled shopping list application built to fulfill the requirements of a software engineering technical assessment. It features a web-based UI and a robust Python backend that understands natural language commands in both English and Hindi. The goal of this project is to demonstrate a full-stack approach, from complex NLP processing on the server to a functional and interactive user interface in the browser.
+This is a smart, voice-controlled shopping list application built to fulfill the requirements of a software engineering technical assessment. It features a web-based UI and a robust Python backend that understands natural language commands in both English and Hindi, demonstrating a full-stack approach from complex NLP processing to a functional web interface.
 
 ---
 
 ### 🌐 Live Demo & Screenshot
 
-**Live Application URL**: [https://your-shopping-assistant-url.a.run.app](https://voice-shopping-assistant-app.onrender.com/) ![Application Screenshot](screenshot.png) ---
+**Live Application URL**: [Live link](https://voice-shopping-assistant-app.onrender.com/) ![Application Screenshot](screenshot.png)
 
-### ✨ Features Covered
+---
 
-* **Web Interface**: A clean, minimalist UI built with Flask for managing the shopping list.
-* **Bilingual Voice Commands**: Integrated browser-based voice recognition to process spoken commands in both English and Hindi.
-* **NLP Pipeline**: Understands natural language commands, corrects typos with fuzzy matching (`rapidfuzz`), and handles synonyms and plurals (`inflect`).
-* **Smart Suggestions**: Recommends items based on shopping history and the current season, and suggests substitutes for common items.
-* **Full List Management**: Supports adding, removing, finding, and clearing items. Items are automatically categorized and stored in a case-insensitive manner.
-* **Price Search**: Allows searching for items under a specific price based on a mock price list.
-* **Data Persistence**: Automatically saves and loads the shopping list and history to a JSON file, so your data is saved between sessions.
-* **Export Functionality**: The final list can be exported to both CSV and PDF formats.
+### ✨ Features Overview
+
+| Feature                  | Description                                                                                             | Status          |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- | --------------- |
+| **Web Interface** | A clean, minimalist UI built with Flask for managing the shopping list.                                   | ✅ Implemented |
+| **Bilingual Voice Commands** | Integrated browser-based voice recognition to process spoken commands in both English and Hindi.          | ✅ Implemented |
+| **NLP Pipeline** | Understands natural language, corrects typos, and handles synonyms & plurals.                             | ✅ Implemented |
+| **Smart Suggestions** | Recommends items based on shopping history, season, and suggests substitutes.                           | ✅ Implemented |
+| **Full List Management** | Supports add, remove, find, and clear. Items are automatically categorized and case-insensitive.          | ✅ Implemented |
+| **Price Search** | Allows searching for items under a specific price based on a mock price list.                           | ✅ Implemented |
+| **Data Persistence** | Automatically saves and loads the shopping list and history to a JSON file.                             | ✅ Implemented |
+| **Export Functionality** | The final list can be exported to both CSV and PDF formats.                                             | ✅ Implemented |
 
 ---
 
@@ -28,8 +34,8 @@ This is a smart, voice-controlled shopping list application built to fulfill the
 To run this application on your local machine, please follow these steps.
 
 #### **Prerequisites**
-* Python 3.8+
-* `ffmpeg`: This is a required system dependency for audio conversion.
+* Python 3.9+
+* `ffmpeg`: A system dependency for audio conversion.
     * **On Debian/Ubuntu**: `sudo apt-get install ffmpeg`
     * **On macOS (with Homebrew)**: `brew install ffmpeg`
     * **On Windows**: Download from [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) and add the `bin` folder to your system's PATH.
@@ -38,8 +44,8 @@ To run this application on your local machine, please follow these steps.
 
 1.  **Clone the Repository**
     ```bash
-    git clone <https://github.com/adity0208/Voice-Command-Shopping-Assistant.git>
-    cd <Voice-Command-Shopping-Assistant>
+    git clone [https://github.com/adity0208/Voice-Command-Shopping-Assistant.git](https://github.com/adity0208/Voice-Command-Shopping-Assistant.git)
+    cd Voice-Command-Shopping-Assistant
     ```
 
 2.  **Create and Activate a Virtual Environment**
@@ -60,7 +66,7 @@ To run this application on your local machine, please follow these steps.
 
 4.  **Run the Application**
     ```bash
-    # We use Gunicorn as the web server
+    # For a production-like server
     gunicorn --bind 0.0.0.0:8080 app:app
     ```
 
