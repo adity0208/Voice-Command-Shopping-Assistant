@@ -1,0 +1,59 @@
+{
+    "shopping_list": {
+        "Miscellaneous": {
+            "aalu chahie": {
+                "display_name": "Aalu chahie",
+                "quantity": "1 kg"
+            },
+            "tel chahie": {
+                "display_name": "Tel chahie",
+                "quantity": "1"
+            },
+            "list chahie": {
+                "display_name": "List chahie",
+                "quantity": "1"
+            },
+            "list pdf": {
+                "display_name": "List pdf",
+                "quantity": "1"
+            }
+        },
+        "Produce": {
+            "tomato chahie": {
+                "display_name": "Tomato chahie",
+                "quantity": "1"
+            }
+        },
+        "Pantry Staples": {
+            "oil chahie": {
+                "display_name": "Oil chahie",
+                "quantity": "1"
+            }
+        }
+    },
+    "shopping_history": {
+        "\u091f\u093e\u092f\u0930 2 \u0915\u0947\u091c\u0940 \u092e\u093f\u0932\u094d\u0915": 1,
+        "\u092a\u093e\u0902\u091a \u092c\u094d\u0930\u0947\u0921": 1,
+        "\u0935\u093e\u0907\u092c\u094d\u0930\u0947\u091f\u094d\u0938": 1,
+        "\u0915 \u091f\u092e\u093e\u091f\u0930": 1,
+        "\u0915 \u0924\u0947\u0932": 1,
+        "\u092c\u094d\u0930\u0940\u0921\u094d\u0938": 1,
+        "\u092b\u093e\u0907\u0935 \u092c\u094d\u0930\u0940\u0921\u094d\u0938": 3,
+        "\u0915\u0947\u091c\u0940 \u092e\u093f\u0932\u094d\u0915": 2,
+        "\u0915\u093f\u0932\u094b \u092e\u093f\u0932\u094d\u0915": 1,
+        "\u090f\u0921 2 \u0915\u0947\u091c\u0940 \u092e\u093f\u0932\u094d\u0915": 2,
+        "\u090f\u0921 1 \u0915 \u091f\u094b\u092e\u0947\u091f\u094b": 1,
+        "\u090f\u0921 1 \u0915\u0947\u091c\u0940 \u092e\u093f\u0932\u094d\u0915": 1,
+        "add 2 kg milk": 1,
+        "add five bread": 1,
+        "tomato chahie": 2,
+        "aalu chahie": 2,
+        "aalu": 1,
+        "add 1 kg potato": 1,
+        "oil": 1,
+        "tel chahie": 1,
+        "oil chahie": 1,
+        "list chahie": 1,
+        "list pdf": 1
+    }
+}
