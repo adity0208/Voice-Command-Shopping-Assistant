@@ -8,7 +8,7 @@ This is a smart, voice-controlled shopping list application built to fulfill the
 
 ### 🌐 Live Demo & Screenshot
 
-**Live Application URL**: [https://your-shopping-assistant-url.a.run.app](https://your-shopping-assistant-url.a.run.app) ![Application Screenshot](screenshot.png) ---
+**Live Application URL**: [https://your-shopping-assistant-url.a.run.app](https://voice-shopping-assistant-app.onrender.com/) ![Application Screenshot](screenshot.png) ---
 
 ### ✨ Features Covered
 
@@ -38,8 +38,8 @@ To run this application on your local machine, please follow these steps.
 
 1.  **Clone the Repository**
     ```bash
-    git clone <your-repo-url>
-    cd <your-repo-name>
+    git clone <https://github.com/adity0208/Voice-Command-Shopping-Assistant.git>
+    cd <Voice-Command-Shopping-Assistant>
     ```
 
 2.  **Create and Activate a Virtual Environment**
