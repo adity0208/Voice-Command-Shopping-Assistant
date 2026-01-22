@@ -4,3 +4,4 @@ rapidfuzz
 inflect
 SpeechRecognition
 ffmpeg-python
+flask-cors

@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg-light: #FFFFFF;
+    /* Pure White for Q-Commerce */
+    --color-bg-dark: #0f172a;
+    --color-primary: #E63946;
+    /* Red - Urgency */
+    --color-secondary: #2979FF;
+    /* Blue - Trust */
+    --color-cta: #FF6F00;
+    /* Orange - Action */
+    --color-cta-hover: #e65100;
+    --color-success: #28A745;
+    /* Green - Success */
+  }
+
+  body {
+    @apply antialiased tracking-wide bg-[#F5F7FA] text-slate-800;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  .dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
+}
+
+@layer components {
+
+  /* Clean Card Style - Quick Commerce */
+  .qc-card {
+    @apply bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden transition-all duration-200;
+  }
+
+  .dark .qc-card {
+    @apply bg-slate-900 border-slate-800 shadow-none;
+  }
+
+  /* Glass/Blur Utilities */
+  .mask-fade-sides {
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+}
+
+/* Animations */
+@keyframes scale-in {
+  from {
+    transform: scale(0);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full hover:bg-slate-400;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-slate-700 hover:bg-slate-600;
+}
