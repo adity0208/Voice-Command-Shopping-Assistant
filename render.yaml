@@ -2,10 +2,22 @@ services:
   - type: web
     name: voice-shopping-assistant-app
     runtime: python
+    plan: free
+    region: oregon
     buildCommand: ./render-build.sh
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    
+    # FFmpeg buildpack for voice recognition
+    buildpacks:
+      - url: https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git
+    
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11
+        value: "3.11"
+      - key: NODE_VERSION
+        value: "18"
       - key: VITE_API_URL
         value: /api
+    
+    # Health check to ensure app is running
+    healthCheckPath: /api/shopping-list
