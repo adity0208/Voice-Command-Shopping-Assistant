@@ -228,12 +228,21 @@ class ShoppingAssistant:
 
 # --- Flask Application Deployment Setup ---
 
-# Ensure consistent paths across different environments
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+# Use getcwd() for Render compatibility (works better than __file__ in deployed environments)
+BASE_DIR = os.getcwd()
 STATIC_FOLDER = os.path.join(BASE_DIR, 'client', 'dist')
 
+print(f"DEBUG: Current working directory: {BASE_DIR}")
 print(f"DEBUG: Serving static files from: {STATIC_FOLDER}")
 print(f"DEBUG: Static folder exists: {os.path.exists(STATIC_FOLDER)}")
+
+# List contents if folder exists
+if os.path.exists(STATIC_FOLDER):
+    print(f"DEBUG: Contents of {STATIC_FOLDER}:")
+    try:
+        print(os.listdir(STATIC_FOLDER))
+    except Exception as e:
+        print(f"DEBUG: Could not list directory: {e}")
 
 app = Flask(__name__, static_folder=STATIC_FOLDER, static_url_path='/')
 CORS(app) 
@@ -247,13 +256,26 @@ assistant = ShoppingAssistant()
 def serve(path):
     """
     Acts as the entry point for the React application.
-    - If a specific file (JS/CSS) is requested and exists, serve it.
-    - Otherwise, return index.html to allow React Router to handle navigation.
+    - API routes are handled by their specific endpoints (not caught here)
+    - If a specific file (JS/CSS/assets) is requested and exists, serve it
+    - Otherwise, return index.html to allow React Router to handle navigation
     """
-    if path != "" and os.path.exists(app.static_folder + '/' + path):
-        return send_from_directory(app.static_folder, path)
-    else:
+    # Don't intercept API routes
+    if path.startswith('api/'):
+        return {'error': 'Not found'}, 404
+    
+    # Try to serve the requested file if it exists
+    if path != "":
+        file_path = os.path.join(app.static_folder, path)
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            return send_from_directory(app.static_folder, path)
+    
+    # Fallback to index.html for React Router
+    index_path = os.path.join(app.static_folder, 'index.html')
+    if os.path.exists(index_path):
         return send_from_directory(app.static_folder, 'index.html')
+    else:
+        return f"Error: index.html not found in {app.static_folder}", 500
 
 # --- API ENDPOINTS ---
 

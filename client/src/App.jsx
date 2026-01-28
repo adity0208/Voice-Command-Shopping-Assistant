@@ -14,6 +14,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 const SUCCESS_SOUND = "https://actions.google.com/sounds/v1/science_fiction/scifi_laser.ogg";
 
 function App() {
+    console.log("DEBUG: Render Cycle Started - App component entry");
+
     const [shoppingList, setShoppingList] = useState({});
     const [commandText, setCommandText] = useState('');
     const [suggestions, setSuggestions] = useState([]);
@@ -30,33 +32,56 @@ function App() {
     const [apiResponse, setApiResponse] = useState(null);
     const [apiError, setApiError] = useState(null);
 
+    console.log("DEBUG: Before useRef hooks");
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
+    console.log("DEBUG: After useRef hooks");
 
     // Stats Calculations
     const dashboardStats = useMemo(() => {
+        console.log("DEBUG: useMemo dashboardStats execution started");
         let totalItems = 0;
         let estTotal = 0;
         const cartListArray = [];
 
-        Object.values(shoppingList).forEach(items => {
-            Object.values(items).forEach(item => {
-                const catalogItem = CATALOG.find(c => c.name.toLowerCase() === item.display_name.toLowerCase());
-                const price = catalogItem ? catalogItem.price : 100;
-                const qtyMatch = item.quantity.match(/\d+/);
-                const qty = qtyMatch ? parseInt(qtyMatch[0]) : 1;
+        try {
+            if (!shoppingList || typeof shoppingList !== 'object') {
+                console.log("DEBUG: shoppingList is empty or invalid type", typeof shoppingList);
+                return { totalItems, estTotal, cartListArray };
+            }
 
-                totalItems += 1; // Unique items or total quantity? Using unique items for list length usually
-                estTotal += price * qty;
+            console.log("DEBUG: Processing Shopping List Keys", Object.keys(shoppingList));
 
-                cartListArray.push({
-                    name: item.display_name,
-                    display_name: item.display_name,
-                    qty: qty,
-                    price: price
+            Object.values(shoppingList).forEach((categoryItems, catIdx) => {
+                if (!categoryItems || typeof categoryItems !== 'object') return;
+
+                Object.values(categoryItems).forEach((item, itemIdx) => {
+                    if (!item || !item.display_name) return;
+
+                    const displayName = String(item.display_name);
+                    const catalogItem = CATALOG.find(c => c.name.toLowerCase() === displayName.toLowerCase());
+                    const price = catalogItem ? catalogItem.price : 100;
+
+                    // Handle quantity safely
+                    const itemQtyRaw = String(item.quantity || '1');
+                    const qtyMatch = itemQtyRaw.match(/\d+/);
+                    const qty = qtyMatch ? parseInt(qtyMatch[0]) : 1;
+
+                    totalItems += 1;
+                    estTotal += price * qty;
+
+                    cartListArray.push({
+                        name: displayName,
+                        display_name: displayName,
+                        qty: qty,
+                        price: price
+                    });
                 });
             });
-        });
+            console.log("DEBUG: useMemo dashboardStats successful completion");
+        } catch (memError) {
+            console.error("CRITICAL: Error in dashboardStats useMemo:", memError);
+        }
 
         return { totalItems, estTotal, cartListArray };
     }, [shoppingList]);
@@ -65,6 +90,7 @@ function App() {
     const playSuccess = () => new Audio(SUCCESS_SOUND).play().catch(() => { });
 
     useEffect(() => {
+        console.log("DEBUG: useEffect [startup] triggered");
         fetchList();
         fetchSuggestions();
 
@@ -74,8 +100,21 @@ function App() {
         }
     }, []);
 
-    const fetchList = async () => axios.get(`${API_URL}/shopping-list`).then(res => setShoppingList(res.data));
-    const fetchSuggestions = async () => axios.get(`${API_URL}/suggest`).then(res => setSuggestions(res.data.suggestions || []));
+    const fetchList = async () => {
+        console.log("DEBUG: Fetching shopping list...");
+        axios.get(`${API_URL}/shopping-list`)
+            .then(res => {
+                console.log("DEBUG: Received shopping list", res.data);
+                setShoppingList(res.data);
+            })
+            .catch(err => console.error("DEBUG: fetchList error", err));
+    };
+
+    const fetchSuggestions = async () => {
+        axios.get(`${API_URL}/suggest`)
+            .then(res => setSuggestions(res.data.suggestions || []))
+            .catch(err => console.error("DEBUG: fetchSuggestions error", err));
+    };
 
     const sendCommand = async (text) => {
         if (!text.trim()) return;
@@ -138,30 +177,30 @@ function App() {
     };
 
     const getItemQuantity = (itemName) => {
-        for (const cat in shoppingList) {
-            for (const key in shoppingList[cat]) {
-                if (shoppingList[cat][key].display_name.toLowerCase().includes(itemName.toLowerCase())) {
-                    const qtyMatch = shoppingList[cat][key].quantity.match(/\d+/);
-                    return qtyMatch ? parseInt(qtyMatch[0]) : 1;
+        try {
+            for (const cat in shoppingList) {
+                for (const key in shoppingList[cat]) {
+                    if (shoppingList[cat][key]?.display_name?.toLowerCase().includes(itemName.toLowerCase())) {
+                        const qtyMatch = String(shoppingList[cat][key].quantity || '0').match(/\d+/);
+                        return qtyMatch ? parseInt(qtyMatch[0]) : 0;
+                    }
                 }
             }
-        }
+        } catch (e) { console.error("DEBUG: getItemQuantity error", e); }
         return 0;
     };
 
     const toggleDrawer = (mode) => setDrawerState({ isOpen: true, mode });
     const closeDrawer = () => setDrawerState(prev => ({ ...prev, isOpen: false }));
 
+    console.log("DEBUG: Preparing to return JSX");
+
     return (
         <div className={`min-h-screen pb-24 md:pb-8 flex flex-col relative overflow-hidden transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`}>
-
-            {/* Background handled in CSS now (light/dark vars) */}
-
+            <Toaster position="top-center" richColors />
             {/* --- Header --- */}
             <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 pt-4 pb-2 px-4 shadow-sm">
                 <div className="max-w-6xl mx-auto space-y-3">
-
-                    {/* Search Bar Row */}
                     <div className="flex items-center gap-3">
                         <form onSubmit={(e) => { e.preventDefault(); sendCommand(commandText); }} className="flex-grow relative">
                             <div className="absolute left-4 top-3 text-slate-400">
@@ -175,7 +214,6 @@ function App() {
                                 className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl pl-12 pr-4 py-3 text-sm focus:ring-2 ring-orange-500/50 transition-all text-slate-800 dark:text-white"
                             />
                         </form>
-
                         <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500 hover:text-orange-500">
                             {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                         </button>
@@ -185,16 +223,11 @@ function App() {
 
             {/* Content */}
             <main className="flex-grow p-4 md:px-8 max-w-6xl mx-auto w-full space-y-8">
+                <section><HeroBanner /></section>
 
-                {/* Promo Banner */}
-                <section>
-                    <HeroBanner />
-                </section>
-
-                {/* Category Filter */}
                 <section className="sticky top-[80px] z-30 py-2 -mx-4 px-4 md:mx-0 md:px-0 bg-[#F5F7FA]/95 dark:bg-slate-950/95 backdrop-blur-sm">
                     <div className="flex items-center gap-3 overflow-x-auto no-scrollbar">
-                        {CATEGORIES.map(cat => (
+                        {(CATEGORIES || []).map(cat => (
                             <button
                                 key={cat}
                                 onClick={() => setActiveCategory(cat)}
@@ -209,7 +242,6 @@ function App() {
                     </div>
                 </section>
 
-                {/* Catalog */}
                 <section className="min-h-[400px]">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-xl font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
@@ -220,7 +252,7 @@ function App() {
 
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
                         {CATALOG
-                            .filter(p => activeCategory === "All" || p.category.includes(activeCategory === "Vegetables" ? "Vegetables" : activeCategory))
+                            .filter(p => !p.category || activeCategory === "All" || p.category.includes(activeCategory === "Vegetables" ? "Vegetables" : activeCategory))
                             .map(product => {
                                 const qty = getItemQuantity(product.name);
                                 return (
