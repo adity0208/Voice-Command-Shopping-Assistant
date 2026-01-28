@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: voice-shopping-assistant-app
+    runtime: python
+    buildCommand: ./render-build.sh
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: VITE_API_URL
+        value: /api

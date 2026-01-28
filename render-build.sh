@@ -13,3 +13,11 @@ npm run build
 cd ..
 
 echo "Build Configuration Complete!"
+echo "Verifying build output..."
+if [ -d "client/dist" ]; then
+    echo "SUCCESS: client/dist exists."
+    ls -la client/dist
+else
+    echo "ERROR: client/dist NOT FOUND!"
+    exit 1
+fi

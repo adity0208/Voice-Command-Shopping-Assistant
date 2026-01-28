@@ -228,8 +228,14 @@ class ShoppingAssistant:
 
 # --- Flask Application Deployment Setup ---
 
-# Point static_folder to 'client/dist' where Vite builds your React files
-app = Flask(__name__, static_folder='client/dist', static_url_path='/')
+# Ensure consistent paths across different environments
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+STATIC_FOLDER = os.path.join(BASE_DIR, 'client', 'dist')
+
+print(f"DEBUG: Serving static files from: {STATIC_FOLDER}")
+print(f"DEBUG: Static folder exists: {os.path.exists(STATIC_FOLDER)}")
+
+app = Flask(__name__, static_folder=STATIC_FOLDER, static_url_path='/')
 CORS(app) 
 
 assistant = ShoppingAssistant()
