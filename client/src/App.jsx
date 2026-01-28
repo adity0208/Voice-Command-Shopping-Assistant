@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import axios from 'axios';
 import { Toaster, toast } from 'sonner';
 import { Search, Menu, ShoppingBag, Mic, TrendingUp, Sun, Moon } from 'lucide-react';
-import ShoppingList from './components/ShoppingList';
 import DebugPanel from './components/DebugPanel';
 import CartDrawer from './components/CartDrawer';
 import ProductCard from './components/ProductCard';
