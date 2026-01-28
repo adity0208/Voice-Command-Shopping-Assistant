@@ -4,20 +4,27 @@ services:
     runtime: python
     plan: free
     region: oregon
-    buildCommand: ./render-build.sh
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    
+    # Build command - explicitly use bash
+    buildCommand: bash render-build.sh
+    
+    # Start command with optimized settings
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --log-level info
     
     # FFmpeg buildpack for voice recognition
     buildpacks:
       - url: https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git
     
+    # Environment variables
     envVars:
       - key: PYTHON_VERSION
         value: "3.11"
       - key: NODE_VERSION
-        value: "18"
+        value: "18.18.0"
       - key: VITE_API_URL
         value: /api
+      - key: NODE_ENV
+        value: production
     
     # Health check to ensure app is running
     healthCheckPath: /api/shopping-list
