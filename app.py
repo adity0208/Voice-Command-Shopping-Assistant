@@ -249,42 +249,20 @@ CORS(app)
 
 assistant = ShoppingAssistant()
 
-# --- FRONTEND SERVING ROUTES ---
-
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    """
-    Acts as the entry point for the React application.
-    - API routes are handled by their specific endpoints (not caught here)
-    - If a specific file (JS/CSS/assets) is requested and exists, serve it
-    - Otherwise, return index.html to allow React Router to handle navigation
-    """
-    # Don't intercept API routes
-    if path.startswith('api/'):
-        return {'error': 'Not found'}, 404
-    
-    # Try to serve the requested file if it exists
-    if path != "":
-        file_path = os.path.join(app.static_folder, path)
-        if os.path.exists(file_path) and os.path.isfile(file_path):
-            return send_from_directory(app.static_folder, path)
-    
-    # Fallback to index.html for React Router
-    index_path = os.path.join(app.static_folder, 'index.html')
-    if os.path.exists(index_path):
-        return send_from_directory(app.static_folder, 'index.html')
-    else:
-        return f"Error: index.html not found in {app.static_folder}", 500
-
-# --- API ENDPOINTS ---
+# ============================================
+# API ENDPOINTS - MUST BE DEFINED FIRST
+# ============================================
+# These routes must come BEFORE the catch-all route
+# to prevent Flask from serving index.html for API requests
 
 @app.route('/api/shopping-list', methods=['GET'])
 def get_list():
+    """Get the current shopping list"""
     return jsonify(assistant.shopping_list)
 
 @app.route('/api/command', methods=['POST'])
 def handle_command():
+    """Process a shopping command (add, remove, clear, etc.)"""
     try:
         data = request.get_json()
         command_text = data.get('command')
@@ -306,6 +284,7 @@ def handle_command():
 
 @app.route('/api/recognize', methods=['POST'])
 def recognize_speech():
+    """Convert audio to text using Google Speech Recognition"""
     try:
         if not shutil.which("ffmpeg"):
             return jsonify({
@@ -345,8 +324,52 @@ def recognize_speech():
 
 @app.route('/api/suggest', methods=['GET'])
 def get_suggestions_route():
+    """Get shopping suggestions based on history"""
     suggestions = assistant.get_suggestions()
     return jsonify({"suggestions": suggestions})
+
+# ============================================
+# FRONTEND SERVING - CATCH-ALL ROUTE
+# ============================================
+# This MUST be defined AFTER all API routes
+# It serves the React app and handles client-side routing
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    """
+    Serves the React application and handles client-side routing.
+    
+    Priority:
+    1. Explicitly reject /api/* requests (should never reach here)
+    2. Serve static files (JS, CSS, images) if they exist
+    3. Fallback to index.html for React Router
+    """
+    # CRITICAL: Reject any API requests that somehow reach this route
+    # This is a safety net - API routes should be handled above
+    if path.startswith('api/') or path.startswith('api'):
+        print(f"WARNING: API request reached catch-all route: {path}")
+        return jsonify({"error": "API endpoint not found"}), 404
+    
+    # Serve static files (JS, CSS, assets) if they exist
+    if path:
+        # Sanitize path to prevent directory traversal
+        safe_path = os.path.normpath(path).lstrip('/')
+        file_path = os.path.join(app.static_folder, safe_path)
+        
+        # Only serve if file exists and is within static folder
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            # Verify the file is within the static folder (security check)
+            if os.path.commonpath([app.static_folder, file_path]) == app.static_folder:
+                return send_from_directory(app.static_folder, safe_path)
+    
+    # Fallback to index.html for React Router (client-side routing)
+    index_path = os.path.join(app.static_folder, 'index.html')
+    if os.path.exists(index_path):
+        return send_from_directory(app.static_folder, 'index.html')
+    else:
+        return f"Error: index.html not found in {app.static_folder}", 500
+
 
 if __name__ == '__main__':
     # Use environment variables for Render compatibility
