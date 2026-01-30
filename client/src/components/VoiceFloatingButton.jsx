@@ -50,10 +50,16 @@ const VoiceFloatingButton = ({ isListening, onClick, audioStream }) => {
                     onClick={onClick}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-40 bg-black dark:bg-white text-white dark:text-black w-14 h-14 rounded-full shadow-xl shadow-black/20 flex items-center justify-center group"
+                    className="fixed z-40 bg-black dark:bg-white text-white dark:text-black w-16 h-16 md:w-14 md:h-14 rounded-full shadow-xl shadow-black/20 flex items-center justify-center group"
+                    style={{
+                        bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))',
+                        right: '1rem'
+                    }}
                 >
+                    {/* Pulsing Ring */}
+                    <div className="absolute inset-0 rounded-full border border-slate-400/50 animate-ping opacity-20" />
                     <div className="absolute inset-0 rounded-full bg-slate-500/20 group-hover:scale-110 transition-transform" />
-                    <Mic className="w-6 h-6" strokeWidth={2} />
+                    <Mic className="w-6 h-6 z-10" strokeWidth={2} />
                 </motion.button>
             )}
         </>

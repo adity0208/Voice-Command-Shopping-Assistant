@@ -91,27 +91,82 @@ class ShoppingAssistant:
         cleaned_item_details = " ".join(normalized_tokens)
         return action, cleaned_item_details, warnings
 
+    def preprocess_hindi_numerals(self, text: str) -> str:
+        """
+        Converts Hindi phonetic measurement words into numeric strings.
+        Handles 'saadhe' (+0.5) logic.
+        """
+        replacements = {
+            "pau": "0.25", "paon": "0.25", "pav": "0.25",
+            "aadha": "0.5", "adha": "0.5",
+            "sava": "1.25", "sawa": "1.25",
+            "dedh": "1.5", "derh": "1.5",
+            "paune": "0.75", "pauna": "0.75",
+            "dhai": "2.5", "dhayi": "2.5"
+        }
+        
+        words = text.lower().split()
+        processed_words = []
+        skip_next = False
+        
+        for i, word in enumerate(words):
+            if skip_next:
+                skip_next = False
+                continue
+                
+            if word in ["saadhe", "sadhe", "saade"]:
+                # Look ahead for the next number
+                if i + 1 < len(words):
+                    next_word = words[i+1]
+                    # Check if next word is a digit or a known number word (simple check)
+                    if next_word.replace('.', '', 1).isdigit():
+                       val = float(next_word) + 0.5
+                       processed_words.append(str(val))
+                       skip_next = True
+                    else:
+                        processed_words.append(word) # Keep if logic fails
+                else:
+                    processed_words.append(word)
+            elif word in replacements:
+                processed_words.append(replacements[word])
+            else:
+                processed_words.append(word)
+                
+        return " ".join(processed_words)
+
     def parse_command(self, action: str, item_details: str) -> dict:
-        command_dict = {"action": action, "item_key": "", "display_name": "", "quantity": 1, "unit": "", "warnings": []}
+        command_dict = {"action": action, "item_key": "", "display_name": "", "quantity": 1, "unit": "", "warnings": [], "original_transcript": item_details}
         if action in ["clear", "suggest"]: return command_dict
-        text_for_parsing = item_details
+        
+        # Preprocess for Hindi Numerals
+        text_for_parsing = self.preprocess_hindi_numerals(item_details)
+        
         price_match = re.search(r'(\d+)', text_for_parsing)
         if action == "find" and price_match:
             command_dict["max_price"] = float(price_match.group(1))
             return command_dict
-        quantity_match = re.search(r'(\d+)', text_for_parsing)
+            
+        # Extract quantity (now handles floats like 0.25, 1.5, etc.)
+        quantity_match = re.search(r'(\d+(\.\d+)?)', text_for_parsing)
         if quantity_match:
-            command_dict["quantity"] = int(quantity_match.group(1))
+            command_dict["quantity"] = float(quantity_match.group(1))
+            # If it's a whole number, convert to int for cleaner display
+            if command_dict["quantity"].is_integer():
+                command_dict["quantity"] = int(command_dict["quantity"])
+
         unit_match = process.extractOne(text_for_parsing, self.unit_map.keys(), scorer=fuzz.partial_ratio, score_cutoff=90)
         if unit_match:
             command_dict["unit"] = self.unit_map[unit_match[0]]
+            
         best_item_match = None
         best_score = 0
         for known_item in sorted(list(self.all_known_items), key=len, reverse=True):
+             # Use partial ratio but boost score if whole word match
              score = fuzz.partial_ratio(known_item, text_for_parsing)
              if score > best_score and score > 75:
                  best_score = score
                  best_item_match = known_item
+                 
         if best_item_match:
              command_dict["display_name"] = best_item_match
              canonical_item = self.synonym_map.get(best_item_match, best_item_match)
@@ -120,17 +175,18 @@ class ShoppingAssistant:
              singular_item = self.inflector.singular_noun(canonical_item)
              command_dict["item_key"] = singular_item if singular_item else canonical_item
         else:
-            fallback_item = re.sub(r'\d+', '', text_for_parsing).strip()
+            fallback_item = re.sub(r'(\d+(\.\d+)?)', '', text_for_parsing).strip() # Remove float/int
             for unit in self.unit_map.keys(): fallback_item = fallback_item.replace(unit, "")
             command_dict["display_name"] = fallback_item.strip()
             command_dict["item_key"] = fallback_item.strip()
+            
         return command_dict
 
     def process_command(self, command: dict) -> dict:
         action, item_key, max_price = command.get("action"), command.get("item_key"), command.get("max_price")
         response = {"status": "success", "message": "", "data": {}}
         if action == "add" and item_key:
-            response["message"] = self.add_item(item_key, command.get("display_name"), command.get("quantity"), command.get("unit"))
+            response["message"] = self.add_item(item_key, command.get("display_name"), command.get("quantity"), command.get("unit"), command.get("original_transcript"))
         elif action == "remove" and item_key:
             response["message"] = self.remove_item(item_key)
         elif action == "find" and item_key:
@@ -154,11 +210,18 @@ class ShoppingAssistant:
             response["message"] = "Unrecognized command."
         return response
 
-    def add_item(self, item_key: str, display_name: str, quantity: int, unit: str) -> str:
+    def add_item(self, item_key: str, display_name: str, quantity: int, unit: str, transcript: str = "") -> str:
         category = self.get_category(item_key)
         if category not in self.shopping_list: self.shopping_list[category] = {}
         quantity_str = f"{quantity} {unit}".strip()
-        self.shopping_list[category][item_key.lower()] = {"display_name": display_name.capitalize(), "quantity": quantity_str}
+        
+        # Store metadata including transcript
+        self.shopping_list[category][item_key.lower()] = {
+            "display_name": display_name.capitalize(),
+            "quantity": quantity_str,
+            "transcript": transcript  # Store what passed valid input
+        }
+        
         self.shopping_history[item_key.lower()] = self.shopping_history.get(item_key.lower(), 0) + 1
         self.save_list()
         message = f"Added {quantity_str} {display_name.capitalize()} to {category}."
@@ -258,7 +321,9 @@ assistant = ShoppingAssistant()
 @app.route('/api/shopping-list', methods=['GET'])
 def get_list():
     """Get the current shopping list"""
-    return jsonify(assistant.shopping_list)
+    shopping_list = assistant.shopping_list
+    print(f"DEBUG: Returning shopping list with keys: {list(shopping_list.keys())}")
+    return jsonify(shopping_list)
 
 @app.route('/api/command', methods=['POST'])
 def handle_command():

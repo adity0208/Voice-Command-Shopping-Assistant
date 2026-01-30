@@ -7,6 +7,8 @@ import CartDrawer from './components/CartDrawer';
 import ProductCard from './components/ProductCard';
 import CartBar from './components/CartBar';
 import HeroBanner from './components/HeroBanner';
+import TranscriptionHeader from './components/TranscriptionHeader';
+import ShoppingList from './components/ShoppingList';
 import VoiceFloatingButton from './components/VoiceFloatingButton';
 import { CATALOG, CATEGORIES } from './constants/catalog';
 
@@ -105,9 +107,13 @@ function App() {
         axios.get(`${API_URL}/shopping-list`)
             .then(res => {
                 console.log("DEBUG: Received shopping list", res.data);
-                setShoppingList(res.data);
+                // Backend returns the shopping_list directly (not wrapped)
+                setShoppingList(res.data || {});
             })
-            .catch(err => console.error("DEBUG: fetchList error", err));
+            .catch(err => {
+                console.error("DEBUG: fetchList error", err);
+                setShoppingList({}); // Set empty object on error
+            });
     };
 
     const fetchSuggestions = async () => {
@@ -196,14 +202,14 @@ function App() {
     console.log("DEBUG: Preparing to return JSX");
 
     return (
-        <div className={`min-h-screen pb-24 md:pb-8 flex flex-col relative overflow-hidden transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`}>
+        <div className={`min-h-screen pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-8 flex flex-col relative overflow-hidden transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`} style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}>
             <Toaster position="top-center" richColors />
             {/* --- Header --- */}
-            <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 pt-4 pb-2 px-4 shadow-sm">
+            <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 pt-3 pb-2 px-4 md:pt-4 shadow-sm">
                 <div className="max-w-6xl mx-auto space-y-3">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 md:gap-3">
                         <form onSubmit={(e) => { e.preventDefault(); sendCommand(commandText); }} className="flex-grow relative">
-                            <div className="absolute left-4 top-3 text-slate-400">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                                 <Search className="w-5 h-5" />
                             </div>
                             <input
@@ -211,10 +217,10 @@ function App() {
                                 value={commandText}
                                 onChange={(e) => setCommandText(e.target.value)}
                                 placeholder='Search for "Milk"...'
-                                className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl pl-12 pr-4 py-3 text-sm focus:ring-2 ring-orange-500/50 transition-all text-slate-800 dark:text-white"
+                                className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl pl-12 pr-4 py-3 min-h-[44px] text-sm focus:ring-2 ring-orange-500/50 transition-all text-slate-800 dark:text-white"
                             />
                         </form>
-                        <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500 hover:text-orange-500">
+                        <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2.5 md:p-3 min-w-[44px] min-h-[44px] bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500 hover:text-orange-500 flex items-center justify-center">
                             {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                         </button>
                     </div>
@@ -223,7 +229,29 @@ function App() {
 
             {/* Content */}
             <main className="flex-grow p-4 md:px-8 max-w-6xl mx-auto w-full space-y-8">
-                <section><HeroBanner /></section>
+                <TranscriptionHeader
+                    isListening={isVoiceActive}
+                    transcript={apiResponse?.transcript || (loading ? "Processing..." : "")}
+                />
+
+                <section>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+                            <ShoppingBag className="w-5 h-5 text-blue-500" />
+                            Your List
+                        </h2>
+                        <span className="text-sm font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                            {dashboardStats.totalItems} Items · ₹{dashboardStats.estTotal}
+                        </span>
+                    </div>
+
+                    <ShoppingList
+                        list={shoppingList}
+                        onRemove={(name) => sendCommand(`remove ${name}`)}
+                        isProcessing={loading}
+                        onAddCustom={(name) => sendCommand(`add ${name}`)}
+                    />
+                </section>
 
                 <section className="sticky top-[80px] z-30 py-2 -mx-4 px-4 md:mx-0 md:px-0 bg-[#F5F7FA]/95 dark:bg-slate-950/95 backdrop-blur-sm">
                     <div className="flex items-center gap-3 overflow-x-auto no-scrollbar">
@@ -246,11 +274,11 @@ function App() {
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-xl font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
                             <TrendingUp className="w-5 h-5 text-orange-500" />
-                            {activeCategory === "All" ? "Trending Near You" : activeCategory}
+                            {activeCategory === "All" ? "Quick Add from Catalog" : activeCategory}
                         </h2>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-3">
                         {CATALOG
                             .filter(p => !p.category || activeCategory === "All" || p.category.includes(activeCategory === "Vegetables" ? "Vegetables" : activeCategory))
                             .map(product => {
